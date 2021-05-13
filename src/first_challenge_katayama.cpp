@@ -6,10 +6,10 @@ RoombaController::RoombaController():private_nh("~")
 {
     private_nh.param("hz",hz,{10});
     private_nh.param("stage",stage,{0});
-//    private_nh.param("data_output",data_output,{1080});
+    private_nh.param("data_output",data_output,{1080});
 
     sub_pose = nh.subscribe("/roomba/odometry",10,&RoombaController::pose_callback,this);
-//    sub_scan = nh.subscribe("scan",10,$RoombaController::pose_callback_lider,this);
+    sub_scan = nh.subscribe("scan",10,&RoombaController::pose_callback_lider,this);
 
     pub_cmd_vel = nh.advertise<roomba_500driver_meiji::RoombaCtrl>("roomba/control",1);
 }
@@ -17,11 +17,11 @@ RoombaController::RoombaController():private_nh("~")
 void RoombaController::pose_callback(const nav_msgs::Odometry::ConstPtr &msg){
     current_pose = *msg;
 }
-/*
+
 void RoombaController::pose_callback_lider(const sensor_msgs::LaserScan::ConstPtr &msg){
     laserscan = *msg;
 }
-*/
+
 void RoombaController::go_straight()
 {
     cmd_vel.mode = 11;
@@ -30,6 +30,7 @@ void RoombaController::go_straight()
             start_position_x = current_pose.pose.pose.position.x;
             start_position_y = current_pose.pose.pose.position.y;
             stage = 1;
+            std::cout<<"clear till this line"<<std::endl;
         }
         cmd_vel.cntl.linear.x=0.5;
         distance = sqrt((current_pose.pose.pose.position.x - start_position_x)*(current_pose.pose.pose.position.x - start_position_x) + (current_pose.pose.pose.position.y - start_position_y)*(current_pose.pose.pose.position.y - start_position_y));
@@ -57,9 +58,9 @@ void RoombaController::one_rotate(){
     pub_cmd_vel.publish(cmd_vel);
     }
 }
-/*
+
 void RoombaController::approach_wall(){
-    if(stage = 3){
+    if(stage == 3){
         cmd_vel.cntl.linear.x = 0.5;
 
         ROS_INFO_STREAM(laserscan.ranges[data_output]);
@@ -68,7 +69,7 @@ void RoombaController::approach_wall(){
         }
     }
 }
-*/
+
 void RoombaController::process(){
     ros::Rate loop_rate(hz);
 
@@ -76,7 +77,7 @@ void RoombaController::process(){
     {
     go_straight();
     one_rotate();
-//   approach_wall();
+   approach_wall();
     ros::spinOnce();
     loop_rate.sleep();
     }
